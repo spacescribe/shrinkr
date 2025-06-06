@@ -15,12 +15,10 @@ const Url=sequelize.define('Url',
             type: DataTypes.INTEGER,
             default: 0,
         },
-        creationDate:{
-            type: DataTypes.DATE,
-            allowNull: false,
-        }
+    },{
+        timestamps: true, 
     }
 );
 
 console.log("[DEBUG] Url model: ", Url)
-module.export = Url;
+module.exports = Url;
