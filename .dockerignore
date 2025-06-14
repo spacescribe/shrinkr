@@ -1,3 +1,6 @@
 # .dockerignore
 node_modules
 npm-debug.log
+*.sqlite
+*.sqlite3
+*.db
