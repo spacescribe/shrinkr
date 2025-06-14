@@ -3,6 +3,7 @@ const promBundle=require('express-prom-bundle');
 const sequelize=require('./db');
 const Url=require('./models/url');
 const generateUniqueShortId = require('./utils/generateShortId');
+const redisClient=require('./utils/redisClient')
 
 const registy=promBundle({includeMethod: true, includePath: true});
 const client=require('prom-client');
@@ -29,6 +30,8 @@ app.post('/shorten', async(req, res)=>{
                 shortId: shortId
             }
         )
+        await redisClient.set(shortId, originalUrl);
+
         urlShortenCounter.inc();
         res.status(200).json({shortUrl: `${req.headers.host}/${shortId}`})
     }
@@ -39,13 +42,27 @@ app.post('/shorten', async(req, res)=>{
 });
 
 app.get('/:shortId', async (req, res)=>{
-    const url=await Url.findOne({where: {shortId: req.params.shortId}});
-    if(url){
-        url.clickCount+=1
-        await url.save();
-        res.redirect(url.originalUrl);
-    }else{
-        res.status(404).send("Url not found")
+    const shortId = req.params.shortId;
+    try{
+        const cachedUrl=await redisClient.get(shortId);
+        if(cachedUrl){
+            console.log('Cache hit')
+            return res.redirect(cachedUrl)
+        }
+
+        const url=await Url.findOne({where: {shortId: shortId}});
+        if(url){
+            await redisClient.set(shortId, url.originalUrl)
+            url.clickCount+=1
+            await url.save()
+            
+            return res.redirect(url.originalUrl);
+        }else{
+            res.status(404).send("Url not found");
+        }
+    }catch(err){
+        console.error(err.message);
+        res.status(500).send("Internal server error")
     }
 });
 
