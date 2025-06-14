@@ -1,13 +1,23 @@
 const express=require('express');
+const promBundle=require('express-prom-bundle');
 const sequelize=require('./db');
 const Url=require('./models/url');
 const generateUniqueShortId = require('./utils/generateShortId');
+
+const registy=promBundle({includeMethod: true, includePath: true});
+const client=require('prom-client');
 
 require('dotenv').config()
 
 const app=express();
 app.use(express.json());
+app.use(registy);
 const port=process.env.PORT||3000;
+
+const urlShortenCounter= new client.Counter({
+    name: 'shrinkr_urls_shortened_count',
+    help: 'Total number of URLs shortened',
+})
 
 app.post('/shorten', async(req, res)=>{
     try{
@@ -19,6 +29,7 @@ app.post('/shorten', async(req, res)=>{
                 shortId: shortId
             }
         )
+        urlShortenCounter.inc();
         res.status(200).json({shortUrl: `${req.headers.host}/${shortId}`})
     }
     catch (error){
