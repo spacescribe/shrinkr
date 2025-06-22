@@ -4,6 +4,7 @@ const sequelize=require('./db');
 const Url=require('./models/url');
 const generateUniqueShortId = require('./utils/generateShortId');
 const redisClient=require('./utils/redisClient')
+const rateLimiter = require('./middleware/rateLimiter')
 
 const registy=promBundle({includeMethod: true, includePath: true});
 const client=require('prom-client');
@@ -13,6 +14,7 @@ require('dotenv').config()
 const app=express();
 app.use(express.json());
 app.use(registy);
+app.use(rateLimiter);
 const port=process.env.PORT||3000;
 
 const urlShortenCounter= new client.Counter({
