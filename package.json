@@ -31,5 +31,8 @@
     "sqlite": "^5.1.1",
     "sqlite3": "^5.1.7"
   },
-  "keywords": []
+  "keywords": [],
+  "devDependencies": {
+    "autocannon": "^8.0.0"
+  }
 }
